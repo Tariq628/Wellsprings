@@ -5,8 +5,6 @@ from django.db import models
 
 class CustomUserManager(UserManager):
     def create_superuser(self, username, email=None, password=None, **extra_fields):
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("user_types", "SA")  # Set the user_type for superuser
         group, _ = Group.objects.get_or_create(name="SA")
         user = self._create_user(username, email, password, **extra_fields)
@@ -36,10 +34,11 @@ class Manager(AbstractUser):
         self.set_password(self.password)
         self.is_staff = True
         super(Manager, self).save(*args, **kwargs)
-        print("Manager", self.__dict__)
+
         if self.user_types == "SA":
             group, _ = Group.objects.get_or_create(name="SA")
             self.groups.add(group)
+
         elif self.user_types == "BM":
             group, _ = Group.objects.get_or_create(name="BM")
             self.groups.add(group)
