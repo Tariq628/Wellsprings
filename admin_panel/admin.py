@@ -18,7 +18,13 @@ class CustomUserAdmin(UserAdmin):
         super().save_model(request, obj, form, change)
 
 
+@admin.register(Manager)
 class ManagerAdmin(admin.ModelAdmin):
+    list_display = ("username", "email", "user_types", "organisation", "is_verified")
+
+    # Add filter record functionality on te behalf of user_types and is_verified
+    list_filter = ("user_types", "is_verified")
+
     fieldsets = (
         ("Credentials", {"fields": ("username", "password")}),
         ("Personal Info", {"fields": ("first_name", "last_name", "email")}),
@@ -38,8 +44,11 @@ class ManagerAdmin(admin.ModelAdmin):
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         if db_field.name == "user_types":
             if request.user.user_types == "BM":
-                # Limit the choices to only 'CM' (Case Manager) for superusers and Branch Managers
-                kwargs["choices"] = [("CM", "Case Manager")]
+                # Limit the choices to only 'BM' (Branch Manager) for superusers and Other Managers
+                kwargs["choices"] = [("CM", "Case Manager"), ("client", "Client")]
+            if request.user.user_types == "CM":
+                # Limit the choices to only 'CM' (Case Manager) for superusers and Other Managers
+                kwargs["choices"] = [("client", "Client")]
         return super().formfield_for_choice_field(db_field, request, **kwargs)
 
     def get_queryset(self, request):
@@ -47,12 +56,8 @@ class ManagerAdmin(admin.ModelAdmin):
 
         if request.user.user_types == "BM":
             # Filter objects to display only Case Managers
-            qs = qs.filter(user_types__in=["CM", ""])
+            qs = qs.filter(user_types__in=["CM", "client"])
         elif request.user.user_types == "CM":
-            qs = qs.filter(user_types_in=["client"])
+            qs = qs.filter(user_types__in=["client"])
 
         return qs
-
-
-# Register the model with the custom admin
-admin.site.register(Manager, ManagerAdmin)

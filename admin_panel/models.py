@@ -33,9 +33,8 @@ class Manager(AbstractUser):
         db_table = "managers"
 
     def save(self, *args, **kwargs):
-        if not self.is_superuser:
-            self.set_password(self.password)
-            self.is_staff = True
+        self.set_password(self.password)
+        self.is_staff = True
         super(Manager, self).save(*args, **kwargs)
         print("Manager", self.__dict__)
         if self.user_types == "SA":
